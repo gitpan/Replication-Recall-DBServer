@@ -7,7 +7,7 @@
 # redistribute it and/or modify it under the same terms as Perl
 # itself.
 #
-# $Id: DBServer.pm,v 1.8 2000/11/14 21:41:59 cvs Exp $
+# $Id: DBServer.pm,v 1.9 2000/11/16 19:34:37 cvs Exp $
 
 package Replication::Recall::DBServer;
 
@@ -25,7 +25,7 @@ use Replication::Recall::Server;
 use vars qw( $VERSION $AUTOLOAD );
 use POSIX qw( :sys_wait_h :signal_h :errno_h );
 
-( $VERSION ) = '$Revision: 1.8 $' =~ /\s+([\d\.]+)/;
+( $VERSION ) = '$Revision: 1.9 $' =~ /\s+([\d\.]+)/;
 my $recovering = {};
 
 sub reaper { 
@@ -74,14 +74,15 @@ sub debug {
 }
 
 sub run {
-  package Replication::Recall::Server;
   my $self = shift;
-  my $opts = new_EchoOptions();
-  my $echo = new_Echo();
+  my $opts = Replication::Recall::Server::new_EchoOptions();
+  my $echo = Replication::Recall::Server::new_Echo();
   my $names = join(',', @{$self->{Replicas}});
-  Logger_disable_debug_messages(Logger_instance()) unless ($self->{Debug});
-  Echo_start($echo, $names, $opts, $self) and die "Couldn't start server.\n";
-  Echo_loop($echo);
+  Replication::Recall::Server::Logger_disable_debug_messages 
+    (Replication::Recall::Server::Logger_instance()) unless ($self->{Debug});
+  Replication::Recall::Server::Echo_start
+    ($echo, $names, $opts, $self) and die "Couldn't start server.\n";
+  Replication::Recall::Server::Echo_loop($echo);
 }
 
 sub read {

@@ -4,7 +4,7 @@ use ExtUtils::MakeMaker;
 WriteMakefile (
 	       'NAME'	       =>  'Replication::Recall::DBServer',
 	       'AUTHOR'        =>  'Ashish Gulhati <hash@netropolis.org>',
-	       'ABSTRACT_FROM' =>  'DBServer.pm',
+	       'ABSTRACT'      =>  'Database replication server.',
 	       'VERSION_FROM'  =>  'DBServer.pm',
 	       'PREREQ_PM'     =>  {
 				    'DBI'                           =>  0,

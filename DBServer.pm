@@ -7,7 +7,7 @@
 # redistribute it and/or modify it under the same terms as Perl
 # itself.
 #
-# $Id: DBServer.pm,v 1.9 2000/11/16 19:34:37 cvs Exp $
+# $Id: DBServer.pm,v 1.10 2000/11/16 19:40:22 cvs Exp $
 
 package Replication::Recall::DBServer;
 
@@ -25,7 +25,7 @@ use Replication::Recall::Server;
 use vars qw( $VERSION $AUTOLOAD );
 use POSIX qw( :sys_wait_h :signal_h :errno_h );
 
-( $VERSION ) = '$Revision: 1.9 $' =~ /\s+([\d\.]+)/;
+( $VERSION ) = '$Revision: 1.10 $' =~ /\s+([\d\.]+)/;
 my $recovering = {};
 
 sub reaper { 
@@ -400,7 +400,7 @@ There must be loads. Let me know if you find some.
 
 =head1 AUTHOR
 
-DBD::Recall is Copyright (c) 2000 Ashish Gulhati
+Replication::Recall::DBServer is Copyright (c) 2000 Ashish Gulhati
 <hash@netropolis.org>.  All Rights Reserved.
 
 =head1 ACKNOWLEDGEMENTS

@@ -7,7 +7,7 @@
 # redistribute it and/or modify it under the same terms as Perl
 # itself.
 #
-# $Id: DBServer.pm,v 1.10 2000/11/16 19:40:22 cvs Exp $
+# $Id: DBServer.pm,v 1.11 2000/11/18 08:42:54 cvs Exp $
 
 package Replication::Recall::DBServer;
 
@@ -25,7 +25,7 @@ use Replication::Recall::Server;
 use vars qw( $VERSION $AUTOLOAD );
 use POSIX qw( :sys_wait_h :signal_h :errno_h );
 
-( $VERSION ) = '$Revision: 1.10 $' =~ /\s+([\d\.]+)/;
+( $VERSION ) = '$Revision: 1.11 $' =~ /\s+([\d\.]+)/;
 my $recovering = {};
 
 sub reaper { 
@@ -290,7 +290,7 @@ by Eric Newton, to enable the setup of replicated database servers.
 
 Recall is based on a data replication algorithm developed at DEC's SRC
 for the Echo filesystem. It implements a fast protocol with low
-network overhead and guranteed fault tolerance as long as n of 2n+1
+network overhead and guranteed fault tolerance as long as n of 2n-1
 replica nodes are up.
 
 The Replication::Recall::DBServer module provides the functionality

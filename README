@@ -1,0 +1,166 @@
+
+     * NAME
+     * VERSION
+     * SYNOPSIS
+     * DESCRIPTION
+     * CONSTRUCTOR
+     * METHODS
+     * AUTHOR
+     * ACKNOWLEDGEMENTS
+     * LICENSE
+     * DISCLAIMER
+     _________________________________________________________________
+
+                                     NAME
+
+   Replication::Recall::DBServer - Database replication server.
+     _________________________________________________________________
+
+                                    VERSION
+
+ $Revision: 1.13 $
+ $Date: 2001/05/27 11:02:46 $
+     _________________________________________________________________
+
+                                   SYNOPSIS
+
+  use Replication::Recall::DBServer;
+
+  my $port = 8500;
+
+  my $server = new Replication::Recall::DBServer
+    ( Replicas    => ["192.168.1.1:$port",
+		      "192.168.1.2:$port",
+                      "192.168.1.3:$port"],
+
+      DSN         => 'DBI:mysql:database=replica1;host=localhost;port=',
+
+      StopServer  => sub { system ('mysqladmin','shutdown') },
+
+      StartServer => sub { system ('start-stop-daemon', 
+	                           '--start', '-b', '-x', 
+                                   '/usr/bin/safe_mysqld') },
+
+      SyncPath    => '/var/lib/mysql/replica1/',
+      SyncCmd     => 'ssh -l mysql',
+      Debug       => 1
+    );
+
+  unless (fork) { $server->run() }
+  wait();
+     _________________________________________________________________
+
+                                  DESCRIPTION
+
+   This module interfaces to Recall, a data replication library written
+   by Eric Newton, to enable the setup of replicated database servers.
+
+   Recall is based on a data replication algorithm developed at DEC's SRC
+   for the Echo filesystem. It implements a fast protocol with low
+   network overhead and guranteed fault tolerance as long as n of 2n-1
+   replica nodes are up.
+
+   The Replication::Recall::DBServer module provides the functionality
+   needed to set up replication servers to be accessed through the
+   DBD::Recall module.
+
+   You'll probably need root access, or at least access to restart your
+   database server, to make this work properly. You probably don't want
+   to use the same database server to host databases other than the
+   replicated one because Replication::Recall::DBServer will stop and
+   restart the server during replica recovery.
+
+   Further - if you want to use Replication::Recall::DBServer with
+   PostgreSQL, you'll definitely have to dedicate an entire PostgreSQL
+   ``database system'' to the replicated database. This is necessary
+   because PostgreSQL maintains unique object identifiers across an
+   entire database system, which can't be kept consistent across replicas
+   otherwise.
+
+   It's a good idea to never access or update replicas without going
+   through the replication system, or you may end up with lost or
+   inconsistent data, unless you really know what you're doing.
+
+   I've only tried Replication::Recall::DBServer with MySQL so far on
+   Debian GNU/Linux. If you get it to work with another database engine
+   or on another operating system, please email me about your experiences
+   so I can include information about your platform in future releases.
+     _________________________________________________________________
+
+                                  CONSTRUCTOR
+
+   new ()
+          Creates a new replication server object. Takes a hash argument
+          list with the following keys:
+
+   Replicas
+          A reference to an array of all the replica servers in this
+          replica set, in hostname:port format.
+
+   DSN
+          The DBI format DSN (Data Source Name) for the actual underlying
+          database to be used by this replica. This is what you'd pass to
+          DBI's connect() method if you were using a plain old DBD driver
+          to access this replica of the database.
+
+   StopServer
+          A code reference to a routine that will stop the database
+          server during the final stage of bringing this replica up to
+          date with the others in the set.
+
+   StartServer
+          A code reference to a routine that will start the database
+          server after the final stage of bringing this replica up to
+          date with the others in the set. It's probably wise to arrange
+          for this code to completely dissociate the new database server
+          processes from your script's program group, so that they don't
+          die if the perl process does.
+
+   SyncPath
+          The path to the directory that should be rsynced during replica
+          recovery. This filesystem-based method of syncing replicas is a
+          hack, admittedly, but it's the most generally applicable method
+          I could think of. It might not work with database systems that
+          don't keep all their database information in one neat directory
+          tree. If you come up against a limitation of this sync method,
+          I'd like to hear about it.
+
+   SyncCmd
+          The command to use to establish a connection to the master
+          replica while rsyncing. This must establish an 8-bit clean link
+          suitable for rsync to work across, and should be totally
+          non-interactive, so you need to set up your ssh keys or (if you
+          don't give a damn about security) .rhosts access accordingly.
+
+   Debug
+          Set true to see a whole bunch of debugging information.
+     _________________________________________________________________
+
+                                    METHODS
+
+   run()
+          Run the server. Doesn't return if all goes well.
+     _________________________________________________________________
+
+                                    AUTHOR
+
+   Replication::Recall::DBServer is Copyright (c) 2000-2001 Ashish
+   Gulhati <hash@netropolis.org>. All Rights Reserved.
+     _________________________________________________________________
+
+                               ACKNOWLEDGEMENTS
+
+   Thanks to Barkha for inspiration, laughs and all 'round good times;
+   and to Eric Newton, Gurusamy Sarathy, Larry Wall, Richard Stallman and
+   Linus Torvalds for all the great software.
+     _________________________________________________________________
+
+                                    LICENSE
+
+   This code is free software; you can redistribute it and/or modify it
+   under the same terms as Perl itself.
+     _________________________________________________________________
+
+                                  DISCLAIMER
+
+   This is free software. If it breaks, you own both parts.

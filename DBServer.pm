@@ -7,7 +7,7 @@
 # redistribute it and/or modify it under the same terms as Perl
 # itself.
 #
-# $Id: DBServer.pm,v 1.11 2000/11/18 08:42:54 cvs Exp $
+# $Id: DBServer.pm,v 1.14 2001/05/27 11:07:17 cvs Exp $
 
 package Replication::Recall::DBServer;
 
@@ -25,7 +25,7 @@ use Replication::Recall::Server;
 use vars qw( $VERSION $AUTOLOAD );
 use POSIX qw( :sys_wait_h :signal_h :errno_h );
 
-( $VERSION ) = '$Revision: 1.11 $' =~ /\s+([\d\.]+)/;
+( $VERSION ) = '$Revision: 1.14 $' =~ /\s+([\d\.]+)/;
 my $recovering = {};
 
 sub reaper { 
@@ -125,14 +125,20 @@ sub write {
     $ret{Return} = [ $self->{Handles}->{$self->{Counter}}?$self->{Counter}:undef ];
   }
   elsif ($args{Meta} =~ /^Auto/) {
-    my $handle = $self->{Handles}->{$args{Handle}}; my $method = $args{Method};
+    return undef unless my $handle = $self->{Handles}->{$args{Handle}}; 
+    my $method = $args{Method};
     my @eval = eval { $$handle{Handle}->$method(@{$args{Args}}) };
     delete $ret{Die}, @eval = eval { $$handle{Handle}->func(@{$args{Args}}, $method) }
       if $ret{Die} =~ /Can\'t locate object method/;
     $ret{Return} = [ @eval ]; $ret{Eval} = $@ if $@;
-    $ret{Error} = $$handle{Handle}->errstr(); $ret{Err} = $$handle{Handle}->err(); 
-    $ret{State} = $$handle{Handle}->state(); 
-    delete $self->{Handles}->{$args{Handle}} if $args{Method} eq 'DESTROY';
+    if ($args{Method} eq 'DESTROY') {
+      $self->debug("Foo! $args{Handle}\n");
+      delete $self->{Handles}->{$args{Handle}};
+    }
+    else {
+      $ret{Error} = $$handle{Handle}->errstr(); $ret{Err} = $$handle{Handle}->err(); 
+      $ret{State} = $$handle{Handle}->state(); 
+    }
   }
   $self->writelocked(0);
   my $ret = defined &Data::Dumper::Dumpxs?Data::Dumper::DumperX(\%ret):Dumper(\%ret);
@@ -258,29 +264,43 @@ sub AUTOLOAD {
 END {
 }
 
-=pod
+"True Value";
+__END__
 
 =head1 NAME 
 
 Replication::Recall::DBServer - Database replication server.
 
+=head1 VERSION
+
+ $Revision: 1.14 $
+ $Date: 2001/05/27 11:07:17 $
+
 =head1 SYNOPSIS
 
   use Replication::Recall::DBServer;
+
   my $port = 8500;
 
-  my $server = new Replication::Recall::DBServer 
-    ( Replicas    => ["192.168.1.1:$port","192.168.1.2:$port","192.168.1.3:$port"], 
+  my $server = new Replication::Recall::DBServer
+    ( Replicas    => ["192.168.1.1:$port",
+		      "192.168.1.2:$port",
+                      "192.168.1.3:$port"],
+
       DSN         => 'DBI:mysql:database=replica1;host=localhost;port=',
-      StopServer  => sub { system ("mysqladmin shutdown") },
-      StartServer => sub { system ("start-stop-daemon --start -b -x /usr/bin/safe_mysqld") },
-      SyncPath    => '/var/lib/mysql/replica1/', 
+
+      StopServer  => sub { system ('mysqladmin','shutdown') },
+
+      StartServer => sub { system ('start-stop-daemon', 
+	                           '--start', '-b', '-x', 
+                                   '/usr/bin/safe_mysqld') },
+
+      SyncPath    => '/var/lib/mysql/replica1/',
       SyncCmd     => 'ssh -l mysql',
       Debug       => 1
     );
 
   unless (fork) { $server->run() }
-
   wait();
 
 =head1 DESCRIPTION
@@ -388,20 +408,10 @@ Run the server. Doesn't return if all goes well.
 
 =back
 
-=head1 BUGS
-
-=over 2
-
-=item * 
-
-There must be loads. Let me know if you find some.
-
-=back
-
 =head1 AUTHOR
 
-Replication::Recall::DBServer is Copyright (c) 2000 Ashish Gulhati
-<hash@netropolis.org>.  All Rights Reserved.
+Replication::Recall::DBServer is Copyright (c) 2000-2001 Ashish
+Gulhati <hash@netropolis.org>.  All Rights Reserved.
 
 =head1 ACKNOWLEDGEMENTS
 
